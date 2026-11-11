@@ -14,17 +14,12 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("Round to", selection: $denominator) {
-                        Text("1/8\"").tag(8)
-                        Text("1/16\"").tag(16)
-                        Text("1/32\"").tag(32)
-                    }
+                    ChoicePicker(title: "Round to", options: [8, 16, 32],
+                                 label: { "1/\($0)\"" }, selection: $denominator, style: .menu)
                     Toggle("Show feet and inches", isOn: $useFeet)
-                    Picker("Offset multipliers", selection: $multiplierModeRaw) {
-                        ForEach(MultiplierMode.allCases) { mode in
-                            Text(mode.displayName).tag(mode.rawValue)
-                        }
-                    }
+                    ChoicePicker(title: "Offset multipliers", options: MultiplierMode.allCases.map(\.rawValue),
+                                 label: { MultiplierMode(rawValue: $0)?.displayName ?? $0 },
+                                 selection: $multiplierModeRaw, style: .menu)
                 } header: {
                     Text("Measurements")
                 } footer: {
@@ -33,11 +28,9 @@ struct SettingsView: View {
 
                 Section("Level") {
                     Toggle("Beep on target", isOn: $levelBeep)
-                    Picker("On-target window", selection: $levelTolerance) {
-                        Text("±½°").tag(0.5)
-                        Text("±1°").tag(1.0)
-                        Text("±2°").tag(2.0)
-                    }
+                    ChoicePicker(title: "On-target window", options: [0.5, 1.0, 2.0],
+                                 label: { $0 == 0.5 ? "±½°" : "±\(Int($0))°" },
+                                 selection: $levelTolerance, style: .menu)
                 }
 
                 Section {

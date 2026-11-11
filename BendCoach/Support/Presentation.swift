@@ -40,7 +40,7 @@ extension BenderProfile {
     /// "Take-up 5"", plus the conduit when the name doesn't already say it.
     var summaryLine: String {
         let takeUpText = "Take-up \(LengthFormat.standard.string(takeUp))"
-        return name.contains(conduitDescription) ? takeUpText : "\(takeUpText) · \(conduitDescription)"
+        return name.localizedCaseInsensitiveContains(conduitDescription) ? takeUpText : "\(takeUpText) · \(conduitDescription)"
     }
 }
 

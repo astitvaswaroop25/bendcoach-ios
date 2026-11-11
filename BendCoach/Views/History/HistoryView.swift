@@ -82,21 +82,23 @@ struct HistoryView: View {
 
 struct SavedBendRow: View {
     let item: SavedBend
-    @ScaledMetric(relativeTo: .headline) private var iconWidth = 28
+    @ScaledMetric(relativeTo: .headline) private var iconWidth: CGFloat = 28
     @Environment(\.backgroundProminence) private var prominence
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let colors = RowColors(prominence: prominence)
-        HStack(spacing: 12) {
+        let layout = AdaptiveRowLayout.layout(for: typeSize, spacing: 12)
+        layout {
             Image(systemName: item.kind.symbolName)
                 .foregroundStyle(colors.icon)
-                .frame(width: iconWidth)
+                .frame(width: typeSize.isAccessibilitySize ? nil : iconWidth)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.title)
                     .font(.headline)
                     .foregroundStyle(colors.title)
-                Text("\(item.kind.title) · \(item.createdAt.formatted(date: .abbreviated, time: .shortened))")
+                Text("\(item.kind.title) · \(item.createdAt.formatted(.dateTime.month(.abbreviated).day().hour().minute()))")
                     .font(.subheadline)
                     .foregroundStyle(colors.detail)
             }

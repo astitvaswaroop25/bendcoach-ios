@@ -27,11 +27,18 @@ struct BenderSummaryRow: View {
 
 struct BenderSummaryLabel: View {
     let bender: BenderProfile
+    @ScaledMetric(relativeTo: .body) private var iconWidth: CGFloat = 28
     @Environment(\.backgroundProminence) private var prominence
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let colors = RowColors(prominence: prominence)
-        Label {
+        let layout = AdaptiveRowLayout.layout(for: typeSize, spacing: 12)
+        layout {
+            Image(systemName: "wrench.adjustable")
+                .foregroundStyle(colors.icon)
+                .frame(width: typeSize.isAccessibilitySize ? nil : iconWidth)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(bender.name)
                     .foregroundStyle(colors.title)
@@ -39,10 +46,8 @@ struct BenderSummaryLabel: View {
                     .font(.subheadline)
                     .foregroundStyle(colors.detail)
             }
-        } icon: {
-            Image(systemName: "wrench.adjustable")
-                .foregroundStyle(colors.icon)
         }
         .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
     }
 }

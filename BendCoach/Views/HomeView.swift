@@ -155,16 +155,19 @@ struct HomeView: View {
 struct BendKindRow: View {
     let kind: BendKind
     let locked: Bool
-    @ScaledMetric(relativeTo: .title2) private var iconWidth = 36
+    @ScaledMetric(relativeTo: .title2) private var iconWidth: CGFloat = 36
     @Environment(\.backgroundProminence) private var prominence
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let colors = RowColors(prominence: prominence)
-        HStack(spacing: 14) {
+        let stacked = typeSize.isAccessibilitySize
+        let layout = AdaptiveRowLayout.layout(for: typeSize)
+        layout {
             Image(systemName: kind.symbolName)
                 .font(.title2)
                 .foregroundStyle(colors.icon)
-                .frame(width: iconWidth)
+                .frame(width: stacked ? nil : iconWidth)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(kind.title)
@@ -173,12 +176,20 @@ struct BendKindRow: View {
                 Text(kind.subtitle)
                     .font(.subheadline)
                     .foregroundStyle(colors.detail)
+                if locked && stacked {
+                    Label("Pro", systemImage: "lock.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(colors.detail)
+                }
             }
-            Spacer(minLength: 8)
-            if locked {
-                Image(systemName: "lock.fill")
-                    .foregroundStyle(colors.detail)
-                    .accessibilityLabel("Pro")
+            .frame(maxWidth: stacked ? .infinity : nil, alignment: .leading)
+            if !stacked {
+                Spacer(minLength: 8)
+                if locked {
+                    Image(systemName: "lock.fill")
+                        .foregroundStyle(colors.detail)
+                        .accessibilityLabel("Pro")
+                }
             }
         }
         .padding(.vertical, 6)

@@ -86,11 +86,11 @@ struct BenderListView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(profile.name)
                         .foregroundStyle(Color.primary)
-                    Text("Take-up \(LengthFormat.standard.string(profile.takeUp)) · \(profile.conduitDescription)")
+                    Text(profile.summaryLine)
                         .font(.subheadline)
                         .foregroundStyle(Color.secondary)
                 }
-                Spacer()
+                Spacer(minLength: 8)
                 if profile.id.uuidString == selectedBenderID {
                     Image(systemName: "checkmark")
                         .font(.body.bold())

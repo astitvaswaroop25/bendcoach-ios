@@ -71,9 +71,9 @@ struct LevelGauge: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             } else {
-                ContentUnavailableView("Level needs a real iPhone",
+                ContentUnavailableView("Level unavailable",
                                        systemImage: "level",
-                                       description: Text("The motion sensor isn't available here, so the level can't run."))
+                                       description: Text("The level needs the motion sensor in a real iPhone or iPad."))
             }
         }
         .onChange(of: isOnTarget) { _, onTarget in
@@ -186,6 +186,7 @@ struct GuidedBendView: View {
 
     @Environment(\.lengthFormat) private var format
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     @ScaledMetric(relativeTo: .largeTitle) private var calloutSize: CGFloat = 34
     @StateObject private var level = MotionLevel()
     @State private var index = 0
@@ -222,38 +223,57 @@ struct GuidedBendView: View {
             }
             .scrollBounceBehavior(.basedOnSize)
 
-            HStack {
-                Button {
-                    index -= 1
-                } label: {
-                    Label("Back", systemImage: "chevron.left")
-                        .frame(minHeight: 44)
+            if typeSize.isAccessibilitySize {
+                VStack(spacing: 8) {
+                    nextButton(isLast: isLast)
+                        .buttonStyle(.highVisFullWidth)
+                    backButton
                 }
-                .disabled(index == 0)
-                Spacer()
-                Button {
-                    if isLast {
-                        dismiss()
-                    } else {
-                        index += 1
-                    }
-                } label: {
-                    Text(isLast ? "Done" : "Next step")
-                        .frame(minWidth: 120)
+            } else {
+                HStack {
+                    backButton
+                    Spacer()
+                    nextButton(isLast: isLast)
+                        .buttonStyle(.highVis)
                 }
-                .buttonStyle(.highVis)
             }
         }
         .padding()
         .frame(maxWidth: 640)
         .frame(maxWidth: .infinity)
-        .navigationTitle(plan.kind.title)
+        .navigationTitle("Step by step")
         .navigationBarTitleDisplayMode(.inline)
         .keepsLevelRunning(level)
     }
 
+    private var backButton: some View {
+        Button {
+            index -= 1
+        } label: {
+            Label("Back", systemImage: "chevron.left")
+                .frame(minHeight: 44)
+        }
+        .disabled(index == 0)
+    }
+
+    private func nextButton(isLast: Bool) -> some View {
+        Button {
+            if isLast {
+                dismiss()
+            } else {
+                index += 1
+            }
+        } label: {
+            Text(isLast ? "Done" : "Next step")
+                .frame(minWidth: 120)
+        }
+    }
+
     private func markCallout(_ mark: BendMark) -> some View {
-        HStack(alignment: .top, spacing: 16) {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10))
+            : AnyLayout(HStackLayout(alignment: .top, spacing: 16))
+        return layout {
             MarkBadge(label: mark.label, size: 56)
             VStack(alignment: .leading, spacing: 4) {
                 Text(mark.distanceText(format))
@@ -268,6 +288,7 @@ struct GuidedBendView: View {
             }
             Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .accessibilityElement(children: .combine)

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import BendKit
 
 /// A row that shows a tape measurement and opens the fraction keypad when tapped.
@@ -174,8 +175,11 @@ struct KeyButton: View {
     var accessibilityText: String? = nil
     let action: () -> Void
 
-    @ScaledMetric(relativeTo: .title) private var digitHeight: CGFloat = 58
-    @ScaledMetric(relativeTo: .title3) private var fractionHeight: CGFloat = 46
+    // iPad shows the keypad in a shorter form sheet, so its keys are a little less tall.
+    @ScaledMetric(relativeTo: .title) private var digitHeight: CGFloat = Self.isPad ? 48 : 58
+    @ScaledMetric(relativeTo: .title3) private var fractionHeight: CGFloat = Self.isPad ? 40 : 46
+
+    private static var isPad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
 
     var body: some View {
         Button(action: action) {
