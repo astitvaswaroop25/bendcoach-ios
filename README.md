@@ -8,6 +8,8 @@ when you hit the angle.
 **Status:** early MVP (v0.1.0). It builds and its math tests pass in CI, but it hasn't been
 field-tested or released yet.
 
+![BendCoach screens](docs/screenshots/overview.jpg)
+
 ## Features
 
 | | Free | Pro (one-time) |
@@ -40,6 +42,20 @@ python3 tools/crosscheck.py                  # checks the formulas against Ideal
 ```
 
 GitHub Actions runs both on every push and builds the app for the iOS Simulator on macOS.
+
+### Screenshots in CI
+
+Put `[screenshots]` in a commit message and CI runs the app in the simulator, screenshots every
+screen, and attaches them to the run as an artifact. This is a starting point for App Store
+screenshots. It works through a debug-only launch argument that opens a screen with sample
+numbers filled in. You can use it from Xcode too: add it under **Edit Scheme → Run → Arguments**.
+
+```
+-demoScreen offset              # calculator with sample inputs
+-demoScreen offset:results      # same, with the marks listed first
+-demoScreen guided              # guided bend mode
+-demoScreen level | saved | settings | benders | paywall
+```
 
 ## Project layout
 
