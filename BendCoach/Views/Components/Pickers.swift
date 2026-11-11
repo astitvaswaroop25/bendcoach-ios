@@ -45,10 +45,10 @@ struct BenderSummaryLabel: View {
                 .frame(width: 32)
             VStack(alignment: .leading, spacing: 2) {
                 Text(bender.name)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color.primary)
                 Text("Take-up \(LengthFormat.standard.string(bender.takeUp)) · \(bender.conduitDescription)")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.secondary)
             }
         }
         .padding(.vertical, 2)

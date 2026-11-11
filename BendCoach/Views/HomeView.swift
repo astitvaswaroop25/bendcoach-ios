@@ -3,6 +3,7 @@ import BendKit
 
 enum HomeRoute: Hashable {
     case benders
+    case guided(BendPlan)
 }
 
 struct HomeView: View {
@@ -56,6 +57,7 @@ struct HomeView: View {
             .navigationDestination(for: HomeRoute.self) { route in
                 switch route {
                 case .benders: BenderListView()
+                case .guided(let plan): GuidedBendView(plan: plan)
                 }
             }
             .sheet(isPresented: $showPaywall) {
@@ -72,6 +74,8 @@ struct HomeView: View {
             path.append(kind)
         } else if Demo.screenName == "benders" {
             path.append(HomeRoute.benders)
+        } else if Demo.screenName == "guided", let plan = Demo.samplePlans().dropFirst().first {
+            path.append(HomeRoute.guided(plan))
         }
     }
 
@@ -101,15 +105,15 @@ struct BendKindRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(kind.title)
                     .font(.headline)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color.primary)
                 Text(kind.subtitle)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.secondary)
             }
             Spacer()
             if locked {
                 Image(systemName: "lock.fill")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.secondary)
                     .accessibilityLabel("Pro")
             }
         }

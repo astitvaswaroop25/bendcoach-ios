@@ -19,7 +19,7 @@ struct StickLayoutView: View {
             let fromEnd = marks[0].reference == .conduitEnd
             let distances = marks.map { $0.distance }
             let low = min(0, distances.min() ?? 0)
-            let high = max(distances.max() ?? 0, 1)
+            let high = max(distances.max() ?? 0, 12)
             let span = high - low
             let inset: CGFloat = 18
             let usable = size.width - inset * 2

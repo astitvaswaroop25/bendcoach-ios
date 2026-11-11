@@ -7,7 +7,7 @@ set -euo pipefail
 BUNDLE_ID="com.astitvaswaroop.bendcoach"
 OUT="screenshots"
 SCREENS=(home offset offset:results stub90:results threePointSaddle:results fourPointSaddle:results
-         backToBack:results rollingOffset:results benders level saved settings paywall)
+         backToBack:results rollingOffset:results guided benders level saved settings paywall)
 
 UDID=$(xcrun simctl list devices available --json | python3 -c '
 import json, sys

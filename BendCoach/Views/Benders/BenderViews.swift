@@ -85,10 +85,10 @@ struct BenderListView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(profile.name)
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(Color.primary)
                     Text("Take-up \(LengthFormat.standard.string(profile.takeUp)) · \(profile.conduitDescription)")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.secondary)
                 }
                 Spacer()
                 if profile.id.uuidString == selectedBenderID {
