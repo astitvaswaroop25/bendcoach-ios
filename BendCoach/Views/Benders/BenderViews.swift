@@ -217,6 +217,9 @@ struct BenderEditorView: View {
         let preset = BenderPresets.closest(to: conduitType, tradeSize)
         takeUp = preset.takeUp
         radius = preset.centerlineRadius
+        if name.hasPrefix("My ") && name.hasSuffix(" bender") {
+            name = "My \(tradeSize.displayName) \(conduitType.displayName) bender"
+        }
     }
 
     private func save() {

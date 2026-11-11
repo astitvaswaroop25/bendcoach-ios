@@ -6,8 +6,8 @@ import BendKit
 /// Live angle readout that turns green, buzzes and beeps when the bend hits its target.
 struct LevelGauge: View {
     let target: Double
+    @ObservedObject var level: MotionLevel
 
-    @StateObject private var level = MotionLevel()
     @AppStorage(PrefKey.levelBeep) private var beep = true
     @AppStorage(PrefKey.levelTolerance) private var tolerance = 0.5
     @State private var hits = 0
@@ -43,14 +43,6 @@ struct LevelGauge: View {
                                        systemImage: "level",
                                        description: Text("The motion sensor isn't available here, so the level can't run."))
             }
-        }
-        .onAppear {
-            level.start()
-            UIApplication.shared.isIdleTimerDisabled = true
-        }
-        .onDisappear {
-            level.stop()
-            UIApplication.shared.isIdleTimerDisabled = false
         }
         .onChange(of: isOnTarget) { _, onTarget in
             guard onTarget else { return }
@@ -125,6 +117,7 @@ struct LevelBar: View {
 
 /// Standalone level tab for checking any bend.
 struct LevelView: View {
+    @StateObject private var level = MotionLevel()
     @State private var target: Double = 30
     private let targets: [Double] = [10, 22.5, 30, 45, 60, 90]
 
@@ -137,12 +130,13 @@ struct LevelView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                LevelGauge(target: target)
+                LevelGauge(target: target, level: level)
                 Spacer()
             }
             .padding()
             .navigationTitle("Level")
         }
+        .keepsLevelRunning(level)
     }
 }
 
@@ -152,6 +146,7 @@ struct GuidedBendView: View {
 
     @Environment(\.lengthFormat) private var format
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var level = MotionLevel()
     @State private var index = 0
 
     var body: some View {
@@ -178,8 +173,7 @@ struct GuidedBendView: View {
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
                     if let angle = step.angle {
-                        LevelGauge(target: angle)
-                            .id(step.number)
+                        LevelGauge(target: angle, level: level)
                     }
                 }
             }
@@ -210,6 +204,7 @@ struct GuidedBendView: View {
         .padding()
         .navigationTitle(plan.kind.title)
         .navigationBarTitleDisplayMode(.inline)
+        .keepsLevelRunning(level)
     }
 
     private func markCallout(_ mark: BendMark) -> some View {
@@ -228,5 +223,28 @@ struct GuidedBendView: View {
         }
         .padding()
         .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
+private struct KeepsLevelRunning: ViewModifier {
+    let level: MotionLevel
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                level.start()
+                UIApplication.shared.isIdleTimerDisabled = true
+            }
+            .onDisappear {
+                level.stop()
+                UIApplication.shared.isIdleTimerDisabled = false
+            }
+    }
+}
+
+extension View {
+    /// Runs the motion sensor and keeps the screen on while this view is showing.
+    func keepsLevelRunning(_ level: MotionLevel) -> some View {
+        modifier(KeepsLevelRunning(level: level))
     }
 }

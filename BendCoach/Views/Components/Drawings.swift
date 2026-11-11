@@ -36,11 +36,11 @@ struct StickLayoutView: View {
 
             if fromEnd {
                 context.draw(Text("END").font(.caption2.bold()).foregroundStyle(Color.secondary),
-                             at: CGPoint(x: inset, y: barY + barHeight + 30), anchor: .leading)
+                             at: CGPoint(x: originX, y: barY + barHeight + 30), anchor: .leading)
             }
 
             for (index, mark) in marks.enumerated() {
-                let x = originX + CGFloat(mark.distance - low) * scale
+                let x = originX + CGFloat(mark.distance) * scale
                 var tick = Path()
                 tick.move(to: CGPoint(x: x, y: barY - barHeight))
                 tick.addLine(to: CGPoint(x: x, y: barY + barHeight))
