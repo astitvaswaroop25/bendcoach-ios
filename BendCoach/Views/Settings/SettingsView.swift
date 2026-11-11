@@ -40,15 +40,28 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("BendCoach Pro") {
+                Section {
                     if store.isPro {
-                        Label("Pro is unlocked", systemImage: "checkmark.seal.fill")
-                            .foregroundStyle(.green)
+                        Label {
+                            Text("Pro is unlocked")
+                        } icon: {
+                            Image(systemName: "checkmark.seal.fill")
+                                .foregroundStyle(.green)
+                        }
                     } else {
                         Button("Unlock Pro") { showPaywall = true }
                     }
                     Button("Restore purchases") {
                         Task { await store.restore() }
+                    }
+                    if ProStore.offersTestUnlock {
+                        Toggle("Unlock Pro for testing", isOn: $store.debugUnlock)
+                    }
+                } header: {
+                    Text("BendCoach Pro")
+                } footer: {
+                    if ProStore.offersTestUnlock {
+                        Text("Test builds can't buy from the App Store. The testing switch only exists in test builds.")
                     }
                 }
 
@@ -58,12 +71,6 @@ struct SettingsView: View {
                     }
                     LabeledContent("Version", value: appVersion)
                 }
-
-                #if DEBUG
-                Section("Developer") {
-                    Toggle("Unlock Pro (debug builds only)", isOn: $store.debugUnlock)
-                }
-                #endif
             }
             .navigationTitle("Settings")
             .sheet(isPresented: $showPaywall) {

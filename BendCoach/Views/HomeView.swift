@@ -1,37 +1,50 @@
 import SwiftUI
 import BendKit
 
-enum HomeRoute: Hashable {
+/// What the Bend tab shows next to its list: a calculator or the bender list.
+enum HomeDestination: Hashable {
+    case bend(BendKind)
     case benders
+}
+
+/// Screens pushed on top of a calculator.
+enum HomeRoute: Hashable {
     case guided(BendPlan)
 }
 
+/// The Bend tab. A list and a detail column side by side on iPad; on iPhone the list pushes
+/// the calculator as usual.
 struct HomeView: View {
     @EnvironmentObject private var store: ProStore
     @Environment(\.currentBender) private var bender
-    @State private var path = NavigationPath()
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @State private var selection: HomeDestination?
+    @State private var detailPath = NavigationPath()
+    @State private var pendingRoute: HomeRoute?
+    @State private var columns = NavigationSplitViewVisibility.all
     @State private var showPaywall = Demo.screenName == "paywall"
-    @State private var appliedDemo = false
+    @State private var showKeypadDemo = Demo.screenName == "keypad"
+    @State private var appeared = false
 
     var body: some View {
-        NavigationStack(path: $path) {
-            List {
+        NavigationSplitView(columnVisibility: $columns) {
+            List(selection: $selection) {
                 Section("Your bender") {
-                    NavigationLink(value: HomeRoute.benders) {
+                    NavigationLink(value: HomeDestination.benders) {
                         BenderSummaryLabel(bender: bender)
                     }
                 }
 
                 Section("Bends") {
                     ForEach(BendKind.allCases) { kind in
-                        if kind.requiresPro && !store.isPro {
+                        if isLocked(kind) {
                             Button {
                                 showPaywall = true
                             } label: {
                                 BendKindRow(kind: kind, locked: true)
                             }
                         } else {
-                            NavigationLink(value: kind) {
+                            NavigationLink(value: HomeDestination.bend(kind)) {
                                 BendKindRow(kind: kind, locked: false)
                             }
                         }
@@ -44,38 +57,85 @@ struct HomeView: View {
                             showPaywall = true
                         } label: {
                             Label("Unlock BendCoach Pro", systemImage: "star.circle.fill")
+                                .foregroundStyle(Color.accentColor)
                         }
                     } footer: {
                         Text("Saddles, back-to-backs, rolling offsets, unlimited benders and saved bends. One purchase, no subscription.")
                     }
                 }
             }
+            .highVisSelection()
+            .sheet(isPresented: $showKeypadDemo) {
+                FractionKeypad(title: "Offset depth", initialValue: 6.5, denominator: 16) { _ in }
+                    .presentationDetents([.large])
+            }
             .navigationTitle("BendCoach")
-            .navigationDestination(for: BendKind.self) { kind in
-                calculator(for: kind)
+            .navigationSplitViewColumnWidth(min: 300, ideal: 340, max: 400)
+        } detail: {
+            NavigationStack(path: $detailPath) {
+                detailRoot
+                    .navigationDestination(for: HomeRoute.self) { route in
+                        switch route {
+                        case .guided(let plan): GuidedBendView(plan: plan)
+                        }
+                    }
             }
-            .navigationDestination(for: HomeRoute.self) { route in
-                switch route {
-                case .benders: BenderListView()
-                case .guided(let plan): GuidedBendView(plan: plan)
-                }
+        }
+        .navigationSplitViewStyle(.balanced)
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
+        }
+        .onAppear(perform: firstAppear)
+        .onChange(of: selection) {
+            // A new pick starts a fresh stack in the detail column.
+            detailPath = NavigationPath()
+            if let pendingRoute {
+                detailPath.append(pendingRoute)
+                self.pendingRoute = nil
             }
-            .sheet(isPresented: $showPaywall) {
-                PaywallView()
+        }
+        .onChange(of: store.isPro) { _, isPro in
+            if !isPro, case .bend(let kind) = selection, kind.requiresPro {
+                selection = defaultSelection
             }
-            .onAppear(perform: applyDemo)
         }
     }
 
-    private func applyDemo() {
-        guard !appliedDemo else { return }
-        appliedDemo = true
+    @ViewBuilder
+    private var detailRoot: some View {
+        switch selection {
+        case .bend(let kind):
+            calculator(for: kind)
+        case .benders:
+            BenderListView()
+        case nil:
+            ContentUnavailableView("Pick a bend",
+                                   systemImage: "point.topleft.down.to.point.bottomright.curvepath",
+                                   description: Text("Choose a bend from the list to get your marks."))
+        }
+    }
+
+    /// iPad opens on the offset calculator so the detail column is never blank.
+    private var defaultSelection: HomeDestination? {
+        horizontalSizeClass == .regular ? .bend(.offset) : nil
+    }
+
+    private func isLocked(_ kind: BendKind) -> Bool {
+        kind.requiresPro && !store.isPro
+    }
+
+    private func firstAppear() {
+        guard !appeared else { return }
+        appeared = true
         if let kind = Demo.kind {
-            path.append(kind)
+            selection = .bend(kind)
         } else if Demo.screenName == "benders" {
-            path.append(HomeRoute.benders)
+            selection = .benders
         } else if Demo.screenName == "guided", let plan = Demo.samplePlans().dropFirst().first {
-            path.append(HomeRoute.guided(plan))
+            pendingRoute = .guided(plan)
+            selection = .bend(plan.kind)
+        } else if selection == nil {
+            selection = defaultSelection
         }
     }
 
@@ -95,29 +155,35 @@ struct HomeView: View {
 struct BendKindRow: View {
     let kind: BendKind
     let locked: Bool
+    @ScaledMetric(relativeTo: .title2) private var iconWidth = 36
+    @Environment(\.backgroundProminence) private var prominence
 
     var body: some View {
+        let colors = RowColors(prominence: prominence)
         HStack(spacing: 14) {
             Image(systemName: kind.symbolName)
                 .font(.title2)
-                .foregroundStyle(Color.accentColor)
-                .frame(width: 36)
+                .foregroundStyle(colors.icon)
+                .frame(width: iconWidth)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(kind.title)
                     .font(.headline)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(colors.title)
                 Text(kind.subtitle)
                     .font(.subheadline)
-                    .foregroundStyle(Color.secondary)
+                    .foregroundStyle(colors.detail)
             }
-            Spacer()
+            Spacer(minLength: 8)
             if locked {
                 Image(systemName: "lock.fill")
-                    .foregroundStyle(Color.secondary)
+                    .foregroundStyle(colors.detail)
                     .accessibilityLabel("Pro")
             }
         }
         .padding(.vertical, 6)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityHint(locked ? "Opens BendCoach Pro" : "")
     }
 }

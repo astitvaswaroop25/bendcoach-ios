@@ -5,6 +5,7 @@ import BendKit
 struct StickLayoutView: View {
     let plan: BendPlan
     @Environment(\.lengthFormat) private var format
+    @ScaledMetric(relativeTo: .caption) private var height: CGFloat = 132
 
     /// Marks that can be laid out on the straight stick before any bending.
     private var stickMarks: [BendMark] {
@@ -47,18 +48,20 @@ struct StickLayoutView: View {
                 context.stroke(tick, with: .color(.accentColor), lineWidth: 3)
 
                 let bubble = CGRect(x: x - 13, y: barY - barHeight - 30, width: 26, height: 26)
-                context.fill(Path(ellipseIn: bubble), with: .color(.accentColor))
-                context.draw(Text(mark.label).font(.headline).foregroundStyle(Color.white),
+                context.fill(Path(ellipseIn: bubble), with: .color(Theme.highVis))
+                context.stroke(Path(ellipseIn: bubble), with: .color(Theme.highVisEdge), lineWidth: 1)
+                context.draw(Text(mark.label).font(.headline).foregroundStyle(Theme.onHighVis),
                              at: CGPoint(x: bubble.midX, y: bubble.midY))
 
                 // Stagger labels so marks that sit close together stay readable.
                 let rowOffset: CGFloat = index.isMultiple(of: 2) ? 0 : 28
-                let caption = "\(mark.benderMark.glyph) \(mark.distanceText(format))"
-                context.draw(Text(caption).font(.caption.monospacedDigit()).foregroundStyle(Color.primary),
-                             at: CGPoint(x: x, y: barY + barHeight + 14 + rowOffset))
+                let caption = Text("\(Image(systemName: mark.benderMark.symbolName)) \(mark.distanceText(format))")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(Color.primary)
+                context.draw(caption, at: CGPoint(x: x, y: barY + barHeight + 14 + rowOffset))
             }
         }
-        .frame(height: 132)
+        .frame(height: height)
         .accessibilityElement()
         .accessibilityLabel(accessibilitySummary)
     }

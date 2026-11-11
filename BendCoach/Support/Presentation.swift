@@ -5,6 +5,12 @@ enum Theme {
     /// Galvanized-steel greys for drawing conduit.
     static let conduit = Color(red: 0.70, green: 0.73, blue: 0.76)
     static let conduitEdge = Color(red: 0.42, green: 0.46, blue: 0.50)
+    /// Safety orange for filled marks and primary buttons; the same in light and dark mode.
+    static let highVis = Color(red: 1.0, green: 0.478, blue: 0.0)
+    /// Text and symbols drawn on top of `highVis`.
+    static let onHighVis = Color.black
+    /// A hairline that keeps orange shapes defined against white backgrounds.
+    static let highVisEdge = Color.black.opacity(0.18)
 }
 
 extension BendKind {
@@ -28,14 +34,13 @@ extension BenderMark {
         case .centerNotch: return "chevron.down"
         }
     }
+}
 
-    /// Plain-text stand-in used inside Canvas drawings.
-    var glyph: String {
-        switch self {
-        case .arrow: return "↑"
-        case .star: return "★"
-        case .centerNotch: return "▼"
-        }
+extension BenderProfile {
+    /// "Take-up 5"", plus the conduit when the name doesn't already say it.
+    var summaryLine: String {
+        let takeUpText = "Take-up \(LengthFormat.standard.string(takeUp))"
+        return name.contains(conduitDescription) ? takeUpText : "\(takeUpText) · \(conduitDescription)"
     }
 }
 

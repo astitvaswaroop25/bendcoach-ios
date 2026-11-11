@@ -36,8 +36,12 @@ struct CalculatorScreen<Inputs: View>: View {
             PlanSections(plan: plan)
         case .some(.failure(let error)):
             Section {
-                Label(error.localizedDescription, systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.red)
+                Label {
+                    Text(error.localizedDescription)
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.red)
+                }
             }
         }
     }
@@ -55,8 +59,12 @@ struct PlanSections: View {
         if !plan.warnings.isEmpty {
             Section {
                 ForEach(plan.warnings, id: \.self) { warning in
-                    Label(warning, systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
+                    Label {
+                        Text(warning)
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                    }
                 }
             }
         }
@@ -65,7 +73,10 @@ struct PlanSections: View {
             ForEach(plan.marks) { mark in
                 MarkRow(mark: mark)
             }
+            // The rows above carry the same numbers at full size, so the diagram's labels stop
+            // growing at the largest text sizes and stay where they belong.
             StickLayoutView(plan: plan)
+                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                 .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4))
             if plan.marks.contains(where: { $0.reference == .backOfFirstBend }) {
                 Text("Mark B goes on after the first bend. Measure it from the back of that 90°.")
@@ -118,12 +129,17 @@ struct MarkBadge: View {
     let label: String
     var size: CGFloat = 36
 
+    @ScaledMetric(relativeTo: .body) private var scale: CGFloat = 1
+
+    private var diameter: CGFloat { size * min(scale, 1.8) }
+
     var body: some View {
         Text(label)
-            .font(.system(size: size * 0.5, weight: .bold, design: .rounded))
-            .foregroundStyle(Color.white)
-            .frame(width: size, height: size)
-            .background(Circle().fill(Color.accentColor))
+            .font(.system(size: diameter * 0.5, weight: .bold, design: .rounded))
+            .foregroundStyle(Theme.onHighVis)
+            .frame(width: diameter, height: diameter)
+            .background(Circle().fill(Theme.highVis))
+            .overlay(Circle().strokeBorder(Theme.highVisEdge, lineWidth: 1))
             .accessibilityLabel("Mark \(label)")
     }
 }
@@ -131,29 +147,48 @@ struct MarkBadge: View {
 struct MarkRow: View {
     let mark: BendMark
     @Environment(\.lengthFormat) private var format
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(spacing: 14) {
-            MarkBadge(label: mark.label)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(mark.distanceText(format))
-                    .font(.title2.monospacedDigit().weight(.bold))
-                Text(mark.referenceText)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 2) {
-                Label(mark.benderMark.displayName, systemImage: mark.benderMark.symbolName)
-                    .font(.subheadline)
-                    .multilineTextAlignment(.trailing)
-                Text("Bend \(AngleFormat.string(mark.angle))")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+        Group {
+            if typeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 6) {
+                    MarkBadge(label: mark.label)
+                    distanceBlock
+                    benderBlock(alignment: .leading)
+                }
+            } else {
+                HStack(spacing: 14) {
+                    MarkBadge(label: mark.label)
+                    distanceBlock
+                    Spacer(minLength: 8)
+                    benderBlock(alignment: .trailing)
+                }
             }
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
+    }
+
+    private var distanceBlock: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(mark.distanceText(format))
+                .font(.title2.monospacedDigit().weight(.bold))
+            Text(mark.referenceText)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func benderBlock(alignment: HorizontalAlignment) -> some View {
+        VStack(alignment: alignment, spacing: 2) {
+            Label(mark.benderMark.displayName, systemImage: mark.benderMark.symbolName)
+                .font(.subheadline)
+                .multilineTextAlignment(alignment == .trailing ? .trailing : .leading)
+            Text("Bend \(AngleFormat.string(mark.angle))")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
     }
 }
 
@@ -164,14 +199,14 @@ struct StepRow: View {
         HStack(alignment: .top, spacing: 12) {
             Text("\(step.number)")
                 .font(.headline)
-                .foregroundStyle(step.isBend ? Color.white : Color.primary)
-                .frame(width: 28, height: 28)
-                .background(Circle().fill(step.isBend ? Color.accentColor : Color.secondary.opacity(0.25)))
+                .foregroundStyle(step.isBend ? Theme.onHighVis : Color.primary)
+                .frame(minWidth: 28, minHeight: 28)
+                .background(Circle().fill(step.isBend ? Theme.highVis : Color(uiColor: .tertiarySystemFill)))
             VStack(alignment: .leading, spacing: 4) {
                 if let prep = step.prep.label {
                     Label(prep, systemImage: step.prep.symbolName)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Color.accentColor)
                 }
                 Text(step.instruction)
             }

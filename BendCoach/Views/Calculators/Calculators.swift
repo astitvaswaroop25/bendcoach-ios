@@ -60,16 +60,8 @@ struct ThreePointSaddleView: View {
     var body: some View {
         CalculatorScreen(kind: .threePointSaddle, result: result) {
             MeasurementField(title: "Obstruction height", hint: "Usually the pipe's outside diameter", value: $height)
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Saddle")
-                Picker("Saddle", selection: $style) {
-                    ForEach(SaddleStyle.allCases) { style in
-                        Text(style.displayName).tag(style)
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
-            .padding(.vertical, 4)
+            ChoicePicker(title: "Saddle", options: SaddleStyle.allCases, label: { $0.displayName },
+                         selection: $style)
             MeasurementField(title: "End to center of obstruction", hint: "Optional: places the marks on the stick", value: $distance)
         }
     }
@@ -155,20 +147,15 @@ struct MeasurePicker: View {
     @Binding var selection: OffsetMeasure
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("That distance runs to")
-            Picker("That distance runs to", selection: $selection) {
-                ForEach(OffsetMeasure.allCases) { measure in
-                    Text(measure.displayName).tag(measure)
-                }
-            }
-            .pickerStyle(.segmented)
+        VStack(alignment: .leading, spacing: 6) {
+            ChoicePicker(title: "That distance runs to", options: OffsetMeasure.allCases,
+                         label: { $0.displayName }, selection: $selection)
             Text(selection == .toObstruction
                  ? "The offset finishes at the obstruction, so shrink is added."
                  : "The first bend starts here. Shrink doesn't change the marks.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .padding(.vertical, 4)
+        .padding(.bottom, 4)
     }
 }

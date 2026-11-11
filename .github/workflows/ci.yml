@@ -76,7 +76,7 @@ jobs:
     if: contains(github.event.head_commit.message, '[screenshots]')
     needs: ios-build
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Run the app in demo mode and take screenshots

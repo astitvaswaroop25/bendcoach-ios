@@ -8,39 +8,63 @@ struct MeasurementField: View {
     @Binding var value: Double?
 
     @Environment(\.lengthFormat) private var format
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var showingKeypad = false
 
     var body: some View {
         Button {
             showingKeypad = true
         } label: {
-            HStack(alignment: .center, spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .foregroundStyle(.primary)
-                    if let hint {
-                        Text(hint)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                Spacer(minLength: 8)
-                Text(value.map { format.string($0) } ?? "Enter")
-                    .font(.title3.monospacedDigit().weight(.semibold))
-                    .foregroundStyle(value == nil ? Color.accentColor : Color.primary)
-            }
-            .padding(.vertical, 4)
-            .contentShape(Rectangle())
+            layout
+                .padding(.vertical, 4)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
         .accessibilityValue(value.map { format.string($0) } ?? "Not set")
+        .accessibilityHint("Opens a keypad")
         .sheet(isPresented: $showingKeypad) {
             FractionKeypad(title: title, initialValue: value, denominator: format.denominator) { newValue in
                 value = newValue
             }
             .presentationDetents([.large])
         }
+    }
+
+    @ViewBuilder
+    private var layout: some View {
+        if typeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 6) {
+                titleBlock
+                valueText
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            HStack(alignment: .center, spacing: 12) {
+                titleBlock
+                Spacer(minLength: 8)
+                valueText
+            }
+        }
+    }
+
+    private var titleBlock: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .foregroundStyle(Color.primary)
+            if let hint {
+                Text(hint)
+                    .font(.caption)
+                    .foregroundStyle(Color.secondary)
+            }
+        }
+    }
+
+    private var valueText: some View {
+        Text(value.map { format.string($0) } ?? "Enter")
+            .font(.title3.monospacedDigit().weight(.semibold))
+            .foregroundStyle(value == nil ? Color.accentColor : Color.primary)
     }
 }
 
@@ -56,6 +80,7 @@ struct FractionKeypad: View {
     let onDone: (Double?) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @ScaledMetric(relativeTo: .largeTitle) private var displaySize: CGFloat = 46
     @State private var entry: MeasurementEntry
     @State private var showSixteenths: Bool
 
@@ -73,62 +98,64 @@ struct FractionKeypad: View {
     }
 
     var body: some View {
-        VStack(spacing: 14) {
-            header
-            Text(entry.display)
-                .font(.system(size: 46, weight: .bold, design: .rounded))
-                .monospacedDigit()
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .padding(.horizontal, 8)
-                .accessibilityLabel("Entered value \(entry.display)")
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 14) {
+                    Text(entry.display)
+                        .font(.system(size: displaySize, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.4)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .padding(.horizontal, 8)
+                        .accessibilityLabel("Entered value \(entry.display)")
 
-            Picker("Fractions", selection: $showSixteenths) {
-                Text("Eighths").tag(false)
-                Text("Sixteenths").tag(true)
-            }
-            .pickerStyle(.segmented)
+                    ChoicePicker(title: "Fractions", options: [false, true],
+                                 label: { $0 ? "Sixteenths" : "Eighths" },
+                                 selection: $showSixteenths, showsTitle: false)
 
-            LazyVGrid(columns: fractionColumns, spacing: 8) {
-                ForEach(showSixteenths ? sixteenths : eighths, id: \.self) { key in
-                    KeyButton(label: key.label, style: .fraction,
-                              isSelected: entry.fraction == MeasurementEntry.Fraction(key.numerator, key.denominator)) {
-                        entry.setFraction(key.numerator, key.denominator)
+                    LazyVGrid(columns: fractionColumns, spacing: 8) {
+                        ForEach(showSixteenths ? sixteenths : eighths, id: \.self) { key in
+                            KeyButton(label: key.label, style: .fraction,
+                                      isSelected: entry.fraction == MeasurementEntry.Fraction(key.numerator, key.denominator)) {
+                                entry.setFraction(key.numerator, key.denominator)
+                            }
+                        }
+                    }
+
+                    LazyVGrid(columns: digitColumns, spacing: 10) {
+                        ForEach(1...9, id: \.self) { digit in
+                            KeyButton(label: "\(digit)") { entry.appendDigit(digit) }
+                        }
+                        KeyButton(label: "ft", style: .secondary, accessibilityText: "Feet") { entry.commitFeet() }
+                        KeyButton(label: "0") { entry.appendDigit(0) }
+                        KeyButton(systemImage: "delete.left", style: .secondary, accessibilityText: "Delete") { entry.backspace() }
+                    }
+
+                    HStack(spacing: 10) {
+                        KeyButton(label: ".", style: .secondary, accessibilityText: "Decimal point") { entry.appendDecimalPoint() }
+                        KeyButton(label: "Clear", style: .secondary) { entry.clear() }
                     }
                 }
+                .padding()
+                .frame(maxWidth: 520)
+                .frame(maxWidth: .infinity)
             }
-
-            LazyVGrid(columns: digitColumns, spacing: 10) {
-                ForEach(1...9, id: \.self) { digit in
-                    KeyButton(label: "\(digit)") { entry.appendDigit(digit) }
+            .scrollBounceBehavior(.basedOnSize)
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
                 }
-                KeyButton(label: "ft", style: .secondary) { entry.commitFeet() }
-                KeyButton(label: "0") { entry.appendDigit(0) }
-                KeyButton(systemImage: "delete.left", style: .secondary) { entry.backspace() }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        onDone(entry.value)
+                        dismiss()
+                    }
+                    .bold()
+                }
             }
-
-            HStack(spacing: 10) {
-                KeyButton(label: ".", style: .secondary) { entry.appendDecimalPoint() }
-                KeyButton(label: "Clear", style: .secondary) { entry.clear() }
-            }
-        }
-        .padding()
-    }
-
-    private var header: some View {
-        HStack {
-            Button("Cancel") { dismiss() }
-            Spacer()
-            Text(title)
-                .font(.headline)
-                .lineLimit(1)
-            Spacer()
-            Button("Done") {
-                onDone(entry.value)
-                dismiss()
-            }
-            .bold()
         }
     }
 }
@@ -144,7 +171,11 @@ struct KeyButton: View {
     var systemImage: String? = nil
     var style: Style = .digit
     var isSelected = false
+    var accessibilityText: String? = nil
     let action: () -> Void
+
+    @ScaledMetric(relativeTo: .title) private var digitHeight: CGFloat = 58
+    @ScaledMetric(relativeTo: .title3) private var fractionHeight: CGFloat = 46
 
     var body: some View {
         Button(action: action) {
@@ -156,17 +187,20 @@ struct KeyButton: View {
                 }
             }
             .font(style == .fraction ? Font.title3.weight(.semibold) : Font.title.weight(.semibold))
-            .frame(maxWidth: .infinity, minHeight: style == .fraction ? 46 : 58)
-            .foregroundStyle(isSelected ? Color.white : Color.primary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+            .frame(maxWidth: .infinity, minHeight: style == .fraction ? fractionHeight : digitHeight)
+            .foregroundStyle(isSelected ? Theme.onHighVis : Color.primary)
             .background(background, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(label ?? "Delete")
+        .accessibilityLabel(accessibilityText ?? label ?? "")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     private var background: Color {
-        if isSelected { return Color.accentColor }
+        if isSelected { return Theme.highVis }
         switch style {
         case .digit: return Color(uiColor: .secondarySystemBackground)
         case .fraction, .secondary: return Color(uiColor: .tertiarySystemFill)

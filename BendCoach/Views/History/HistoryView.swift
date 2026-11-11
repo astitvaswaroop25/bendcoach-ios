@@ -4,26 +4,28 @@ import BendKit
 
 struct HistoryView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Query(sort: \SavedBend.createdAt, order: .reverse) private var saved: [SavedBend]
+    @State private var selection: SavedBend?
+    @State private var columns = NavigationSplitViewVisibility.all
 
     var body: some View {
-        NavigationStack {
+        NavigationSplitView(columnVisibility: $columns) {
             Group {
                 if saved.isEmpty {
                     ContentUnavailableView("Nothing saved yet",
                                            systemImage: "tray",
                                            description: Text("Save a bend from any calculator to keep its marks for the next pull."))
                 } else {
-                    List {
+                    List(selection: $selection) {
                         ForEach(saved) { item in
-                            NavigationLink {
-                                SavedBendDetailView(item: item)
-                            } label: {
+                            NavigationLink(value: item) {
                                 SavedBendRow(item: item)
                             }
                         }
                         .onDelete(perform: delete)
                     }
+                    .highVisSelection()
                 }
             }
             .navigationTitle("Saved")
@@ -32,8 +34,32 @@ struct HistoryView: View {
                     EditButton()
                 }
             }
-            .onAppear(perform: insertDemoBends)
+            .navigationSplitViewColumnWidth(min: 300, ideal: 340, max: 420)
+        } detail: {
+            NavigationStack {
+                if let selection {
+                    SavedBendDetailView(item: selection)
+                        .id(selection)
+                } else {
+                    ContentUnavailableView("No bend selected", systemImage: "tray")
+                }
+            }
         }
+        .navigationSplitViewStyle(.balanced)
+        .onAppear {
+            insertDemoBends()
+            selectFirstIfRoomy()
+        }
+        .onChange(of: saved) {
+            selectFirstIfRoomy()
+        }
+    }
+
+    /// On iPad the newest bend opens in the detail column, so it is never blank.
+    private func selectFirstIfRoomy() {
+        guard horizontalSizeClass == .regular else { return }
+        if let selection, saved.contains(selection) { return }
+        selection = saved.first
     }
 
     private func insertDemoBends() {
@@ -44,29 +70,39 @@ struct HistoryView: View {
     }
 
     private func delete(_ offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(saved[index])
+        let doomed = offsets.map { saved[$0] }
+        if let selection, doomed.contains(selection) {
+            self.selection = nil
+        }
+        for item in doomed {
+            modelContext.delete(item)
         }
     }
 }
 
 struct SavedBendRow: View {
     let item: SavedBend
+    @ScaledMetric(relativeTo: .headline) private var iconWidth = 28
+    @Environment(\.backgroundProminence) private var prominence
 
     var body: some View {
+        let colors = RowColors(prominence: prominence)
         HStack(spacing: 12) {
             Image(systemName: item.kind.symbolName)
-                .foregroundStyle(Color.accentColor)
-                .frame(width: 28)
+                .foregroundStyle(colors.icon)
+                .frame(width: iconWidth)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.title)
                     .font(.headline)
+                    .foregroundStyle(colors.title)
                 Text("\(item.kind.title) · \(item.createdAt.formatted(date: .abbreviated, time: .shortened))")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(colors.detail)
             }
         }
         .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
     }
 }
 

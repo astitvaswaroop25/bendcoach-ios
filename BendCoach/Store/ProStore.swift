@@ -6,6 +6,24 @@ import StoreKit
 final class ProStore: ObservableObject {
     static let proProductID = "com.astitvaswaroop.bendcoach.pro"
 
+    enum Status: Equatable {
+        case loading
+        case ready
+        /// No product came back: offline, or a build the App Store doesn't know about
+        /// (sideloaded or run outside Xcode's StoreKit testing).
+        case unavailable
+    }
+
+    /// True in builds that offer a test unlock instead of a purchase.
+    static var offersTestUnlock: Bool {
+        #if DEBUG
+        return true
+        #else
+        return false
+        #endif
+    }
+
+    @Published private(set) var status: Status = .loading
     @Published private(set) var product: Product?
     @Published private(set) var hasPurchasedPro = false
     @Published private(set) var isPurchasing = false
@@ -37,10 +55,32 @@ final class ProStore: ObservableObject {
     }
 
     func refresh() async {
-        if let products = try? await Product.products(for: [Self.proProductID]) {
-            product = products.first
+        status = .loading
+        if let loaded = await loadProduct(timeout: .seconds(12)) {
+            product = loaded
         }
+        status = product == nil ? .unavailable : .ready
         await updateEntitlements()
+    }
+
+    /// Asks the App Store for the Pro product, giving up after `timeout` so the paywall never
+    /// spins forever. A product that arrives after the timeout still turns the paywall ready.
+    private func loadProduct(timeout: Duration) async -> Product? {
+        await withCheckedContinuation { continuation in
+            let first = FirstResult(continuation)
+            Task { @MainActor [weak self] in
+                let loaded = (try? await Product.products(for: [Self.proProductID]))?.first
+                if let loaded, let self, self.product == nil {
+                    self.product = loaded
+                    self.status = .ready
+                }
+                first.resume(loaded)
+            }
+            Task {
+                try? await Task.sleep(for: timeout)
+                first.resume(nil)
+            }
+        }
     }
 
     func updateEntitlements() async {
@@ -97,5 +137,23 @@ final class ProStore: ObservableObject {
             await transaction.finish()
         }
         await updateEntitlements()
+    }
+}
+
+/// Resumes a continuation with whichever result comes first and ignores the rest.
+private final class FirstResult<Value>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<Value, Never>?
+
+    init(_ continuation: CheckedContinuation<Value, Never>) {
+        self.continuation = continuation
+    }
+
+    func resume(_ value: Value) {
+        lock.lock()
+        let pending = continuation
+        continuation = nil
+        lock.unlock()
+        pending?.resume(returning: value)
     }
 }

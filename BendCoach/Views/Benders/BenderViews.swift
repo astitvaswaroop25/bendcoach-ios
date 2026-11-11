@@ -274,8 +274,12 @@ struct CalibrateTakeUpView: View {
                     LabeledContent("Your take-up", value: format.string(takeUp))
                         .font(.headline)
                 } else if measuredStub != nil {
-                    Text("The stub has to measure longer than the mark distance.")
-                        .foregroundStyle(.red)
+                    Label {
+                        Text("The stub has to measure longer than the mark distance.")
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.red)
+                    }
                 } else {
                     Text("Enter the measured stub to see your take-up.")
                         .foregroundStyle(.secondary)
