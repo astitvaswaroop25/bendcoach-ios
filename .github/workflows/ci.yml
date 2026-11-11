@@ -46,6 +46,30 @@ jobs:
             -quiet \
             CODE_SIGNING_ALLOWED=NO
 
+  # Publishes an unsigned .ipa to the "test-build" release for sideloading onto a personal iPhone.
+  test-ipa:
+    name: Sideload test build (.ipa)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: ios-build
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build an unsigned device app
+        run: bash tools/build_test_ipa.sh
+      - name: Publish to the test-build release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete test-build --yes --cleanup-tag || true
+          gh release create test-build build/BendCoach.ipa \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "Test build (sideload)" \
+            --notes "Unsigned Debug build of ${GITHUB_SHA::7} for installing with Sideloadly or AltStore. In the app, Settings → Developer → Unlock Pro turns on the Pro features for testing."
+
   # Runs only when the commit message contains [screenshots], to save macOS minutes.
   screenshots:
     name: Simulator screenshots
