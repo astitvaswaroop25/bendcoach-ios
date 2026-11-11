@@ -32,6 +32,14 @@ struct HistoryView: View {
                     EditButton()
                 }
             }
+            .onAppear(perform: insertDemoBends)
+        }
+    }
+
+    private func insertDemoBends() {
+        guard Demo.screenName == "saved", saved.isEmpty else { return }
+        for plan in Demo.samplePlans() {
+            modelContext.insert(SavedBend(plan: plan, title: plan.title(format: .standard)))
         }
     }
 

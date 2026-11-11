@@ -21,7 +21,7 @@ final class ProStore: ObservableObject {
 
     init() {
         #if DEBUG
-        debugUnlock = UserDefaults.standard.bool(forKey: PrefKey.debugPro)
+        debugUnlock = UserDefaults.standard.bool(forKey: PrefKey.debugPro) || Demo.unlocksPro
         #else
         debugUnlock = false
         #endif

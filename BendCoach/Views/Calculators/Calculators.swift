@@ -3,7 +3,7 @@ import BendKit
 
 struct StubUpView: View {
     @Environment(\.currentBender) private var bender
-    @State private var stubHeight: Double?
+    @State private var stubHeight: Double? = Demo.sample(11)
 
     private var result: Result<BendPlan, Error>? {
         guard let stubHeight else { return nil }
@@ -20,9 +20,9 @@ struct StubUpView: View {
 
 struct OffsetView: View {
     @Environment(\.multiplierMode) private var mode
-    @State private var depth: Double?
+    @State private var depth: Double? = Demo.sample(6)
     @State private var angle: Double = 30
-    @State private var distance: Double?
+    @State private var distance: Double? = Demo.sample(24)
     @State private var measuredTo: OffsetMeasure = .toObstruction
 
     private var result: Result<BendPlan, Error>? {
@@ -46,9 +46,9 @@ struct OffsetView: View {
 }
 
 struct ThreePointSaddleView: View {
-    @State private var height: Double?
+    @State private var height: Double? = Demo.sample(3)
     @State private var style: SaddleStyle = .fortyFive
-    @State private var distance: Double?
+    @State private var distance: Double? = Demo.sample(48)
 
     private var result: Result<BendPlan, Error>? {
         guard let height else { return nil }
@@ -77,10 +77,10 @@ struct ThreePointSaddleView: View {
 
 struct FourPointSaddleView: View {
     @Environment(\.multiplierMode) private var mode
-    @State private var height: Double?
-    @State private var width: Double?
+    @State private var height: Double? = Demo.sample(4)
+    @State private var width: Double? = Demo.sample(12)
     @State private var angle: Double = 30
-    @State private var distance: Double?
+    @State private var distance: Double? = Demo.sample(36)
 
     private var result: Result<BendPlan, Error>? {
         guard let height, let width else { return nil }
@@ -102,8 +102,8 @@ struct FourPointSaddleView: View {
 
 struct BackToBackView: View {
     @Environment(\.currentBender) private var bender
-    @State private var stubHeight: Double?
-    @State private var backToBack: Double?
+    @State private var stubHeight: Double? = Demo.sample(10)
+    @State private var backToBack: Double? = Demo.sample(30)
 
     private var result: Result<BendPlan, Error>? {
         guard let stubHeight, let backToBack else { return nil }
@@ -123,8 +123,8 @@ struct BackToBackView: View {
 
 struct RollingOffsetView: View {
     @Environment(\.multiplierMode) private var mode
-    @State private var rise: Double?
-    @State private var roll: Double?
+    @State private var rise: Double? = Demo.sample(12)
+    @State private var roll: Double? = Demo.sample(9)
     @State private var angle: Double = 30
     @State private var distance: Double?
     @State private var measuredTo: OffsetMeasure = .toObstruction

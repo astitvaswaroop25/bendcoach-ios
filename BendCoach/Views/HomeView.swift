@@ -1,18 +1,22 @@
 import SwiftUI
 import BendKit
 
+enum HomeRoute: Hashable {
+    case benders
+}
+
 struct HomeView: View {
     @EnvironmentObject private var store: ProStore
     @Environment(\.currentBender) private var bender
-    @State private var showPaywall = false
+    @State private var path = NavigationPath()
+    @State private var showPaywall = Demo.screenName == "paywall"
+    @State private var appliedDemo = false
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 Section("Your bender") {
-                    NavigationLink {
-                        BenderListView()
-                    } label: {
+                    NavigationLink(value: HomeRoute.benders) {
                         BenderSummaryLabel(bender: bender)
                     }
                 }
@@ -49,9 +53,25 @@ struct HomeView: View {
             .navigationDestination(for: BendKind.self) { kind in
                 calculator(for: kind)
             }
+            .navigationDestination(for: HomeRoute.self) { route in
+                switch route {
+                case .benders: BenderListView()
+                }
+            }
             .sheet(isPresented: $showPaywall) {
                 PaywallView()
             }
+            .onAppear(perform: applyDemo)
+        }
+    }
+
+    private func applyDemo() {
+        guard !appliedDemo else { return }
+        appliedDemo = true
+        if let kind = Demo.kind {
+            path.append(kind)
+        } else if Demo.screenName == "benders" {
+            path.append(HomeRoute.benders)
         }
     }
 

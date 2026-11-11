@@ -10,26 +10,36 @@ struct CalculatorScreen<Inputs: View>: View {
 
     var body: some View {
         Form {
+            if Demo.showsResultsFirst {
+                resultSections
+            }
             Section("Measurements") {
                 inputs
             }
-            switch result {
-            case .none:
-                Section {
-                    Text("Enter your measurements and the marks show up here.")
-                        .foregroundStyle(.secondary)
-                }
-            case .some(.success(let plan)):
-                PlanSections(plan: plan)
-            case .some(.failure(let error)):
-                Section {
-                    Label(error.localizedDescription, systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.red)
-                }
+            if !Demo.showsResultsFirst {
+                resultSections
             }
         }
         .navigationTitle(kind.title)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    @ViewBuilder
+    private var resultSections: some View {
+        switch result {
+        case .none:
+            Section {
+                Text("Enter your measurements and the marks show up here.")
+                    .foregroundStyle(.secondary)
+            }
+        case .some(.success(let plan)):
+            PlanSections(plan: plan)
+        case .some(.failure(let error)):
+            Section {
+                Label(error.localizedDescription, systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.red)
+            }
+        }
     }
 }
 
