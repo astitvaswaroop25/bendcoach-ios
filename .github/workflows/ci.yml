@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bendkit-tests:
+    name: BendKit tests (Linux)
+    runs-on: ubuntu-latest
+    container: swift:6.0
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run the math library tests
+        run: swift test --package-path Packages/BendKit
+
+  math-crosscheck:
+    name: Math cross-check (Python reference)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check formulas against manufacturer examples
+        run: python3 tools/crosscheck.py
+
+  ios-build:
+    name: iOS app build (macOS)
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode version
+        run: xcodebuild -version
+      - name: Build for the iOS Simulator
+        run: |
+          xcodebuild build \
+            -project BendCoach.xcodeproj \
+            -scheme BendCoach \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO

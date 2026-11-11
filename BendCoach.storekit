@@ -1,0 +1,38 @@
+{
+  "identifier" : "B3C4D5E6",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "7.99",
+      "familyShareable" : false,
+      "internalID" : "6E5D4C3B",
+      "localizations" : [
+        {
+          "description" : "Saddles, back-to-backs, rolling offsets, unlimited benders and saved bends.",
+          "displayName" : "BendCoach Pro",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.astitvaswaroop.bendcoach.pro",
+      "referenceName" : "BendCoach Pro",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}
