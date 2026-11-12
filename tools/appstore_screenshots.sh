@@ -2,7 +2,7 @@
 # Takes full-resolution App Store screenshots in the simulator, in demo mode:
 #   6.9" iPhone: iPhone 16 Pro Max, 1320 x 2868
 #   13" iPad:    iPad Pro 13-inch (M4), 2064 x 2752
-# plus the paywall for the in-app purchase review screenshot. Output: build/appstore/*.png
+# plus the paywall for the in-app purchase review screenshot. Output: build/appstore/*.jpg
 # and build/BendCoach-AppStore-screenshots.zip. Used by the "App Store screenshots" workflow.
 set -euo pipefail
 
@@ -40,7 +40,7 @@ prepare() {
   xcrun simctl install "$1" "$APP"
 }
 
-# shoot <udid> <prefix> <screens...>: saves <prefix>-01-<screen>.png and so on.
+# shoot <udid> <prefix> <screens...>: saves <prefix>-01-<screen>.jpg and so on.
 shoot() {
   local udid="$1" prefix="$2" n=1
   shift 2
@@ -50,10 +50,13 @@ shoot() {
     xcrun simctl terminate "$udid" "$BUNDLE_ID" >/dev/null 2>&1 || true
     xcrun simctl launch "$udid" "$BUNDLE_ID" -demoScreen "$screen" >/dev/null
     sleep 6
-    xcrun simctl io "$udid" screenshot --type=png "$OUT/$name.png" >/dev/null 2>&1
-    echo "$name $(sips -g pixelWidth -g pixelHeight "$OUT/$name.png" | awk '/pixel/ {printf "%s ", $2}')"
+    xcrun simctl io "$udid" screenshot --type=png "$RAW/$name.png" >/dev/null 2>&1
+    # App Store Connect refuses images with an alpha channel, which simulator PNGs have.
+    # JPEG has none.
+    sips -s format jpeg -s formatOptions best "$RAW/$name.png" --out "$OUT/$name.jpg" >/dev/null
+    echo "$name $(sips -g pixelWidth -g pixelHeight "$OUT/$name.jpg" | awk '/pixel/ {printf "%s ", $2}')"
     # A small preview in the log (tools/extract_screenshots.py reads it back).
-    sips -Z 900 -s format jpeg -s formatOptions 55 "$OUT/$name.png" --out "$PREVIEW/$name.jpg" >/dev/null
+    sips -Z 900 -s format jpeg -s formatOptions 55 "$OUT/$name.jpg" --out "$PREVIEW/$name.jpg" >/dev/null
     echo "SCREENSHOT-BEGIN $name"
     base64 -b 76 -i "$PREVIEW/$name.jpg"
     echo "SCREENSHOT-END $name"
@@ -75,8 +78,9 @@ xcodebuild build \
 APP="build/DerivedData/Build/Products/Debug-iphonesimulator/BendCoach.app"
 
 PREVIEW="build/appstore-preview"
-rm -rf "$OUT" "$PREVIEW"
-mkdir -p "$OUT" "$PREVIEW"
+RAW="build/appstore-raw"
+rm -rf "$OUT" "$PREVIEW" "$RAW"
+mkdir -p "$OUT" "$PREVIEW" "$RAW"
 
 prepare "$PHONE_ID"
 sleep 8
@@ -88,5 +92,5 @@ prepare "$PAD_ID"
 sleep 8
 shoot "$PAD_ID" ipad "${IPAD_SCREENS[@]}"
 
-(cd "$OUT" && zip -q ../BendCoach-AppStore-screenshots.zip ./*.png)
-echo "Saved $(ls "$OUT"/*.png | wc -l | tr -d ' ') screenshots"
+(cd "$OUT" && zip -q ../BendCoach-AppStore-screenshots.zip ./*.jpg)
+echo "Saved $(ls "$OUT"/*.jpg | wc -l | tr -d ' ') screenshots"

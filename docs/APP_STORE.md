@@ -62,11 +62,11 @@ App Store Connect → BendCoach → **Monetization → In-App Purchases → +**:
 | Price | $7.99, or your choice |
 | Display name | BendCoach Pro |
 | Description | Saddles, back-to-backs, rolling offsets and more |
-| Review screenshot | `iap-review-01-paywall-store.png` |
+| Review screenshot | `iap-review-01-paywall-store.jpg` (shows $7.99; ask Claude to retake it if you pick another price) |
 
 ### 8. Fill in the listing and submit
 On the **1.0 Prepare for Submission** page:
-- **Screenshots:** drag `iphone-*.png` into **iPhone 6.9" Display** and `ipad-*.png` into
+- **Screenshots:** drag `iphone-*.jpg` into **iPhone 6.9" Display** and `ipad-*.jpg` into
   **iPad 13" Display**. All of them are in `BendCoach-AppStore-screenshots.zip` on the
   [appstore-assets release](https://github.com/astitvaswaroop25/bendcoach-ios/releases/tag/appstore-assets).
 - **Text:** copy from [the listing below](#listing-text).
