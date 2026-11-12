@@ -52,6 +52,11 @@ shoot() {
     sleep 6
     xcrun simctl io "$udid" screenshot --type=png "$OUT/$name.png" >/dev/null 2>&1
     echo "$name $(sips -g pixelWidth -g pixelHeight "$OUT/$name.png" | awk '/pixel/ {printf "%s ", $2}')"
+    # A small preview in the log (tools/extract_screenshots.py reads it back).
+    sips -Z 900 -s format jpeg -s formatOptions 55 "$OUT/$name.png" --out "$PREVIEW/$name.jpg" >/dev/null
+    echo "SCREENSHOT-BEGIN $name"
+    base64 -b 76 -i "$PREVIEW/$name.jpg"
+    echo "SCREENSHOT-END $name"
     n=$((n + 1))
   done
 }
@@ -69,8 +74,9 @@ xcodebuild build \
   -quiet
 APP="build/DerivedData/Build/Products/Debug-iphonesimulator/BendCoach.app"
 
-rm -rf "$OUT"
-mkdir -p "$OUT"
+PREVIEW="build/appstore-preview"
+rm -rf "$OUT" "$PREVIEW"
+mkdir -p "$OUT" "$PREVIEW"
 
 prepare "$PHONE_ID"
 sleep 8

@@ -8,13 +8,12 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: write
-
 jobs:
   screenshots:
     name: Take App Store screenshots
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[appstore]')
+    permissions:
+      contents: write
     runs-on: macos-15
     timeout-minutes: 50
     steps:
