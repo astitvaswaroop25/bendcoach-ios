@@ -5,6 +5,9 @@ enum Theme {
     /// Galvanized-steel greys for drawing conduit.
     static let conduit = Color(red: 0.70, green: 0.73, blue: 0.76)
     static let conduitEdge = Color(red: 0.42, green: 0.46, blue: 0.50)
+    /// Rotate and turn-around cues: black on white in light mode, white on black in dark.
+    static let cueFill = Color.primary
+    static let onCue = Color(uiColor: .systemBackground)
     /// Safety orange for filled marks and primary buttons; the same in light and dark mode.
     static let highVis = Color(red: 1.0, green: 0.478, blue: 0.0)
     /// Text and symbols drawn on top of `highVis`.

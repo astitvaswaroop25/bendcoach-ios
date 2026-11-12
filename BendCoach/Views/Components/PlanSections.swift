@@ -110,7 +110,11 @@ struct PlanSections: View {
 
         Section("Numbers") {
             ForEach(plan.facts) { fact in
-                LabeledContent(fact.label, value: fact.formatted(format))
+                LabeledContent(fact.label) {
+                    Text(fact.formatted(format))
+                        .font(.measurement(.body, weight: .semibold))
+                        .foregroundStyle(Color.primary)
+                }
             }
         }
 
@@ -127,7 +131,7 @@ struct PlanSections: View {
 
 struct MarkBadge: View {
     let label: String
-    var size: CGFloat = 36
+    var size: CGFloat = 40
 
     @ScaledMetric(relativeTo: .body) private var scale: CGFloat = 1
 
@@ -144,74 +148,80 @@ struct MarkBadge: View {
     }
 }
 
+/// One mark, sized to be read at arm's length: where it goes, then the angle and the bender
+/// mark to line it up with.
 struct MarkRow: View {
     let mark: BendMark
     @Environment(\.lengthFormat) private var format
     @Environment(\.dynamicTypeSize) private var typeSize
+    @ScaledMetric(relativeTo: .subheadline) private var benderColumnWidth: CGFloat = 116
 
     var body: some View {
         Group {
             if typeSize.isAccessibilitySize {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 8) {
                     MarkBadge(label: mark.label)
                     distanceBlock
-                    benderBlock(alignment: .leading)
+                    bendBlock(alignment: .leading)
                 }
             } else {
-                HStack(spacing: 14) {
+                HStack(alignment: .center, spacing: 14) {
                     MarkBadge(label: mark.label)
                     distanceBlock
                     Spacer(minLength: 8)
-                    benderBlock(alignment: .trailing)
+                    bendBlock(alignment: .trailing)
+                        .frame(maxWidth: benderColumnWidth, alignment: .trailing)
                 }
             }
         }
-        .padding(.vertical, 4)
-        .accessibilityElement(children: .combine)
+        .padding(.vertical, 6)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Mark \(mark.label): \(mark.distanceText(format)) \(mark.referenceText). Bend \(AngleFormat.string(mark.angle)) on the \(mark.benderMark.displayName.lowercased()).")
     }
 
     private var distanceBlock: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(mark.distanceText(format))
-                .font(.title2.monospacedDigit().weight(.bold))
+                .font(.measurement(.title))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
             Text(mark.referenceText)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
     }
 
-    private func benderBlock(alignment: HorizontalAlignment) -> some View {
+    private func bendBlock(alignment: HorizontalAlignment) -> some View {
         VStack(alignment: alignment, spacing: 2) {
+            Text(AngleFormat.string(mark.angle))
+                .font(.measurement(.title2))
             Label(mark.benderMark.displayName, systemImage: mark.benderMark.symbolName)
-                .font(.subheadline)
+                .font(.subheadline.weight(.semibold))
                 .multilineTextAlignment(alignment == .trailing ? .trailing : .leading)
-            Text("Bend \(AngleFormat.string(mark.angle))")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
         }
     }
 }
 
 struct StepRow: View {
     let step: BendStep
+    @ScaledMetric(relativeTo: .headline) private var numberSize: CGFloat = 30
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Text("\(step.number)")
-                .font(.headline)
+                .font(.measurement(.headline))
                 .foregroundStyle(step.isBend ? Theme.onHighVis : Color.primary)
-                .frame(minWidth: 28, minHeight: 28)
+                .frame(width: numberSize, height: numberSize)
                 .background(Circle().fill(step.isBend ? Theme.highVis : Color(uiColor: .tertiarySystemFill)))
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 if let prep = step.prep.label {
-                    Label(prep, systemImage: step.prep.symbolName)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color.accentColor)
+                    StatusPill.prepCue(prep, systemImage: step.prep.symbolName, compact: true)
                 }
-                Text(step.instruction)
+                Text(InstructionText.emphasized(step.instruction))
             }
+            .padding(.top, 3)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
     }
 }

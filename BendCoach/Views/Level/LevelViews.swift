@@ -93,7 +93,7 @@ struct LevelGauge: View {
                 .minimumScaleFactor(0.5)
                 .contentTransition(.numericText())
             Text("Target \(AngleFormat.string(target))")
-                .font(.headline)
+                .font(.measurement(.title3, weight: .semibold))
                 .foregroundStyle(.secondary)
             StatusPill(text: statusText, systemImage: statusSymbol, fill: statusFill, foreground: statusForeground)
         }
@@ -208,10 +208,9 @@ struct GuidedBendView: View {
                         markCallout(mark)
                     }
                     if let prep = step.prep.label {
-                        StatusPill(text: prep, systemImage: step.prep.symbolName,
-                                   fill: Theme.highVis, foreground: Theme.onHighVis)
+                        StatusPill.prepCue(prep, systemImage: step.prep.symbolName)
                     }
-                    Text(step.instruction)
+                    Text(InstructionText.emphasized(step.instruction))
                         .font(.title3)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
@@ -284,7 +283,7 @@ struct GuidedBendView: View {
                 Text(mark.referenceText)
                     .foregroundStyle(.secondary)
                 Label(mark.benderMark.displayName, systemImage: mark.benderMark.symbolName)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.headline)
             }
             Spacer(minLength: 0)
         }

@@ -28,20 +28,57 @@ extension ButtonStyle where Self == HighVisButtonStyle {
     static var highVisFullWidth: HighVisButtonStyle { HighVisButtonStyle(fullWidth: true) }
 }
 
-/// A short status label on a colored capsule, used by the level.
+/// A short status label on a colored capsule: level status, and rotate or turn-around cues.
 struct StatusPill: View {
     let text: String
     let systemImage: String
     let fill: Color
     let foreground: Color
+    var compact = false
 
     var body: some View {
         Label(text, systemImage: systemImage)
-            .font(.headline)
+            .font(compact ? .subheadline.weight(.semibold) : .headline)
             .foregroundStyle(foreground)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.horizontal, compact ? 10 : 14)
+            .padding(.vertical, compact ? 4 : 8)
             .background(fill, in: Capsule())
+    }
+}
+
+extension StatusPill {
+    /// The cue to rotate or turn the conduit before a bend. Ink-on-paper inverse, so it reads
+    /// as an instruction and doesn't compete with the orange marks.
+    static func prepCue(_ text: String, systemImage: String, compact: Bool = false) -> StatusPill {
+        StatusPill(text: text, systemImage: systemImage, fill: Theme.cueFill, foreground: Theme.onCue, compact: compact)
+    }
+}
+
+extension Font {
+    /// The voice for tape measurements and angles: SF Rounded, bold, with digits of equal
+    /// width so numbers don't jitter as they change.
+    static func measurement(_ style: Font.TextStyle, weight: Font.Weight = .bold) -> Font {
+        .system(style, design: .rounded, weight: weight).monospacedDigit()
+    }
+}
+
+/// Bolds the parts of a bend instruction you act on: mark letters, bender marks, angles and
+/// lengths. Bold rides on the text's own size, so it works at every style.
+enum InstructionText {
+    private static let pattern = try? NSRegularExpression(
+        pattern: #"mark [A-Z]\b|\b(?:arrow|star)\b|rim notch(?: or teardrop)?|\d+(?:\.\d+)?½?°|(?:\d+' ?)?\d+(?:[- ]\d+/\d+)?"|\d+/\d+""#
+    )
+
+    static func emphasized(_ text: String) -> AttributedString {
+        var result = AttributedString(text)
+        guard let pattern else { return result }
+        let whole = NSRange(text.startIndex..., in: text)
+        for match in pattern.matches(in: text, range: whole) {
+            guard let range = Range(match.range, in: text),
+                  let styled = Range(range, in: result) else { continue }
+            result[styled].inlinePresentationIntent = .stronglyEmphasized
+        }
+        return result
     }
 }
 

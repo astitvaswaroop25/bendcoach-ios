@@ -15,13 +15,18 @@ final class MotionLevel: ObservableObject {
     private var hasReading = false
 
     init() {
-        isAvailable = manager.isDeviceMotionAvailable
+        isAvailable = manager.isDeviceMotionAvailable || Demo.levelAngle != nil
     }
 
     /// Bend angle relative to the zero reading.
     var angle: Double { abs(rawAngle - zeroOffset) }
 
     func start() {
+        if !manager.isDeviceMotionAvailable, let demoAngle = Demo.levelAngle {
+            rawAngle = demoAngle
+            isRunning = true
+            return
+        }
         guard isAvailable, !manager.isDeviceMotionActive else { return }
         hasReading = false
         manager.deviceMotionUpdateInterval = 1.0 / 30.0

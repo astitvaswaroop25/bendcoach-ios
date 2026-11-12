@@ -64,7 +64,7 @@ struct MeasurementField: View {
 
     private var valueText: some View {
         Text(value.map { format.string($0) } ?? "Enter")
-            .font(.title3.monospacedDigit().weight(.semibold))
+            .font(.measurement(.title3, weight: .semibold))
             .foregroundStyle(value == nil ? Color.accentColor : Color.primary)
     }
 }

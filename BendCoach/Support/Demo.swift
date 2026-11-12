@@ -29,6 +29,13 @@ enum Demo {
 
     static var kind: BendKind? { screenName.flatMap { BendKind(rawValue: $0) } }
 
+    /// A steady level reading for the simulator, which has no motion sensor: on target in the
+    /// Level tab, a little short of the bend in guided mode.
+    static var levelAngle: Double? {
+        guard isActive else { return nil }
+        return screenName == "level" ? 29.8 : 43.6
+    }
+
     /// Demo screenshots show Pro screens unlocked, except the paywall itself.
     static var unlocksPro: Bool { isActive && screenName != "paywall" }
 
