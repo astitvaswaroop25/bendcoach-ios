@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 TIMESTAMP = re.compile(r"^\S+Z ")
+BASE64_LINE = re.compile(r"^[A-Za-z0-9+/=]+$")
 
 
 def main(log_path, out_dir):
@@ -24,7 +25,8 @@ def main(log_path, out_dir):
             path.write_bytes(base64.b64decode("".join(chunks)))
             saved.append(path)
             name = None
-        elif name:
+        elif name and BASE64_LINE.match(line):
+            # Anything else (a simulator warning printed mid-image) isn't part of the image.
             chunks.append(line)
     for path in saved:
         print(path)
