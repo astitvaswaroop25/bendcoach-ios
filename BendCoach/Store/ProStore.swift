@@ -55,6 +55,10 @@ final class ProStore: ObservableObject {
     }
 
     func refresh() async {
+        if Demo.storePrice != nil {
+            status = .ready
+            return
+        }
         status = .loading
         if let loaded = await loadProduct(timeout: .seconds(12)) {
             product = loaded

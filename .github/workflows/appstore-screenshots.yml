@@ -1,0 +1,33 @@
+name: App Store screenshots
+
+# Takes full-size App Store screenshots (6.9" iPhone, 13" iPad and the in-app purchase review
+# shot) and publishes them on the "appstore-assets" release. Runs from the Actions tab, or on a
+# push whose commit message contains [appstore].
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  screenshots:
+    name: Take App Store screenshots
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[appstore]')
+    runs-on: macos-15
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - name: Take screenshots in the simulator
+        run: tools/appstore_screenshots.sh
+      - name: Publish on the appstore-assets release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete appstore-assets --yes --cleanup-tag || true
+          gh release create appstore-assets build/BendCoach-AppStore-screenshots.zip build/appstore/*.png \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "App Store screenshots" \
+            --notes "Screenshots from ${GITHUB_SHA::7} for App Store Connect: iphone-* for the 6.9-inch iPhone display, ipad-* for the 13-inch iPad display, and iap-review for the in-app purchase's review screenshot."

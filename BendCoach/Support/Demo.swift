@@ -39,6 +39,10 @@ enum Demo {
     /// Demo screenshots show Pro screens unlocked, except the paywall itself.
     static var unlocksPro: Bool { isActive && screenName != "paywall" }
 
+    /// `-demoScreen paywall:store` shows the paywall as the App Store would, with this price,
+    /// for the in-app purchase screenshot App Review asks for.
+    static var storePrice: String? { screen == "paywall:store" ? "$7.99" : nil }
+
     static var initialTab: AppTab {
         switch screenName {
         case "level": return .level

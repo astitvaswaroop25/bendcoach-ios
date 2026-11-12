@@ -79,11 +79,18 @@ tools/                     Python cross-check of the math and the icon generator
 docs/                      MATH.md (formulas + sources), RESEARCH.md (market), PRODUCT.md (plan)
 ```
 
-## Before the App Store
+## Releasing to the App Store
 
-- Join the Apple Developer Program ($99/year). Create the app in App Store Connect, along with a
-  non-consumable in-app purchase with the ID `com.astitvaswaroop.bendcoach.pro`.
-- Have an electrician test every bend type on scrap and compare the results with `docs/MATH.md`.
-- Replace the placeholder icon (`tools/make_icon.py`). Then take screenshots and publish a privacy
-  policy URL. The app collects no data, so the policy can be short.
-- See `docs/PRODUCT.md` for the launch plan.
+[`docs/APP_STORE.md`](docs/APP_STORE.md) is the step-by-step checklist: developer account, app
+record, API key secrets, then the listing text to paste. The pieces in this repo:
+
+- **Release workflow** (`.github/workflows/release.yml`, run it from the Actions tab) archives a
+  Release build, signs it with the App Store Connect API key and uploads it to TestFlight.
+- **App Store screenshots** (`.github/workflows/appstore-screenshots.yml`, or `[appstore]` in a
+  commit message) publishes 6.9" iPhone, 13" iPad and in-app purchase screenshots on the
+  `appstore-assets` release.
+- [`PRIVACY.md`](PRIVACY.md) and [`SUPPORT.md`](SUPPORT.md) are the privacy policy and support
+  pages the listing links to. `BendCoach/PrivacyInfo.xcprivacy` is the privacy manifest.
+
+Before submitting, have an electrician test every bend type on scrap and compare the results
+with `docs/MATH.md`. See `docs/PRODUCT.md` for the launch plan.

@@ -147,6 +147,9 @@ struct PaywallView: View {
         if let product = store.product {
             return "Unlock for \(product.displayPrice)"
         }
+        if let price = Demo.storePrice {
+            return "Unlock for \(price)"
+        }
         return "Unlock Pro"
     }
 

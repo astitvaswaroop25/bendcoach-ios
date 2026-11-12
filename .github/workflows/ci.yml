@@ -68,7 +68,7 @@ jobs:
             --prerelease \
             --target "$GITHUB_SHA" \
             --title "Test build (sideload)" \
-            --notes "Unsigned Debug build of ${GITHUB_SHA::7} for installing with Sideloadly or AltStore. In the app, Settings → Developer → Unlock Pro turns on the Pro features for testing."
+            --notes "Unsigned Debug build of ${GITHUB_SHA::7} for installing with Sideloadly or AltStore. In the app, the paywall's Unlock Pro for testing button (or Settings → BendCoach Pro) turns on the Pro features for testing."
 
   # Runs only when the commit message contains [screenshots], to save macOS minutes.
   screenshots:
