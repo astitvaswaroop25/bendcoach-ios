@@ -154,7 +154,7 @@ struct MarkRow: View {
     let mark: BendMark
     @Environment(\.lengthFormat) private var format
     @Environment(\.dynamicTypeSize) private var typeSize
-    @ScaledMetric(relativeTo: .subheadline) private var benderColumnWidth: CGFloat = 116
+    @ScaledMetric(relativeTo: .subheadline) private var benderColumnWidth: CGFloat = 126
 
     var body: some View {
         Group {
@@ -195,7 +195,8 @@ struct MarkRow: View {
         VStack(alignment: alignment, spacing: 2) {
             Text(AngleFormat.string(mark.angle))
                 .font(.measurement(.title2))
-            Label(mark.benderMark.displayName, systemImage: mark.benderMark.symbolName)
+            // The symbol rides inline so it stays beside the name when the name wraps.
+            Text("\(Text(Image(systemName: mark.benderMark.symbolName)).foregroundStyle(Color.accentColor)) \(mark.benderMark.displayName)")
                 .font(.subheadline.weight(.semibold))
                 .multilineTextAlignment(alignment == .trailing ? .trailing : .leading)
         }

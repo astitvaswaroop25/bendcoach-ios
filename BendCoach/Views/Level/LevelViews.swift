@@ -107,8 +107,10 @@ struct LevelGauge: View {
                 level.zero()
             } label: {
                 Label("Zero here", systemImage: "scope")
+                    .font(.headline)
             }
-            .buttonStyle(.highVis)
+            .buttonStyle(.bordered)
+            .controlSize(.large)
             if level.zeroOffset != 0 {
                 Button("Clear zero") {
                     level.clearZero()

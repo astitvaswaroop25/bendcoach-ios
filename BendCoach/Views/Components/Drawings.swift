@@ -37,12 +37,28 @@ struct StickLayoutView: View {
             context.fill(Path(roundedRect: bar, cornerRadius: 4), with: .color(Theme.conduit))
             context.stroke(Path(roundedRect: bar, cornerRadius: 4), with: .color(Theme.conduitEdge), lineWidth: 1)
 
+            // Labels sit in rows under the bar. Each one takes the first row where it doesn't
+            // touch a neighbour, so marks that sit close together stay readable.
+            var rows: [[ClosedRange<CGFloat>]] = [[], [], []]
+            let gap: CGFloat = 8
+            func claim(_ span: ClosedRange<CGFloat>) -> Int {
+                for row in rows.indices where !rows[row].contains(where: { $0.overlaps(span) }) {
+                    rows[row].append(span)
+                    return row
+                }
+                rows[rows.count - 1].append(span)
+                return rows.count - 1
+            }
+            func rowY(_ row: Int) -> CGFloat { firstRowY + CGFloat(row) * rowStep }
+
             if fromEnd {
-                context.draw(Text("End").font(.caption.weight(.semibold)).foregroundStyle(Color.secondary),
-                             at: CGPoint(x: originX, y: firstRowY + rowStep), anchor: .leading)
+                let end = context.resolve(Text("End").font(.caption.weight(.semibold)).foregroundStyle(Color.secondary))
+                let width = end.measure(in: size).width
+                let row = claim((originX - gap)...(originX + width + gap))
+                context.draw(end, at: CGPoint(x: originX, y: rowY(row)), anchor: .leading)
             }
 
-            for (index, mark) in marks.enumerated() {
+            for mark in marks {
                 let x = originX + CGFloat(mark.distance) * scale
                 var tick = Path()
                 tick.move(to: CGPoint(x: x, y: barY - barHeight))
@@ -56,12 +72,15 @@ struct StickLayoutView: View {
                                 .foregroundStyle(Theme.onHighVis),
                              at: CGPoint(x: bubble.midX, y: bubble.midY))
 
-                // Stagger labels so marks that sit close together stay readable.
-                let rowY = firstRowY + (index.isMultiple(of: 2) ? 0 : rowStep)
-                let caption = Text("\(Image(systemName: mark.benderMark.symbolName)) \(mark.distanceText(format))")
-                    .font(.measurement(.footnote, weight: .semibold))
-                    .foregroundStyle(Color.primary)
-                context.draw(caption, at: CGPoint(x: x, y: rowY))
+                let caption = context.resolve(
+                    Text("\(Image(systemName: mark.benderMark.symbolName)) \(mark.distanceText(format))")
+                        .font(.measurement(.footnote, weight: .semibold))
+                        .foregroundStyle(Color.primary)
+                )
+                let half = caption.measure(in: size).width / 2
+                let center = min(max(x, half + 2), size.width - half - 2)
+                let row = claim((center - half - gap)...(center + half + gap))
+                context.draw(caption, at: CGPoint(x: center, y: rowY(row)))
             }
         }
         .frame(height: height)
