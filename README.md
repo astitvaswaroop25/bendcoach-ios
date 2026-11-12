@@ -1,6 +1,6 @@
 # BendCoach
 
-A conduit-bending coach for iPhone. Enter a measurement and BendCoach shows numbered marks on
+A conduit-bending coach for iPhone and iPad. Enter a measurement and BendCoach shows numbered marks on
 a drawing of the stick, which bender mark each one lines up with, and when to rotate the pipe.
 Then it walks you through each bend with the phone as a digital level that buzzes and beeps
 when you hit the angle.
@@ -9,6 +9,10 @@ when you hit the angle.
 field-tested or released yet.
 
 ![BendCoach screens](docs/screenshots/overview.jpg)
+
+On iPad the Bend and Saved tabs become two columns:
+
+![BendCoach on iPad](docs/screenshots/ipad.jpg)
 
 ## Features
 
@@ -32,7 +36,8 @@ You need a Mac with **Xcode 16 or later**. The app targets **iOS 17+**.
 3. Run it on a simulator or an iPhone. The level only works on a real iPhone because it needs
    the motion sensor.
 4. Purchases run against `BendCoach.storekit`, which the scheme loads automatically. In Debug
-   builds you can also use **Settings → Developer → Unlock Pro** to skip the purchase.
+   builds you can also skip the purchase: tap **Unlock Pro for testing** on the paywall, or turn
+   on **Settings → BendCoach Pro → Unlock Pro for testing**. Release builds don't have either.
 
 ## Tests
 
@@ -45,8 +50,9 @@ GitHub Actions runs both on every push and builds the app for the iOS Simulator 
 
 ### Screenshots in CI
 
-Put `[screenshots]` in a commit message and CI runs the app in the simulator, screenshots every
-screen, and attaches them to the run as an artifact. This is a starting point for App Store
+Put `[screenshots]` in a commit message and CI runs the app in the simulator and screenshots
+every screen on iPhone (light mode, dark mode and accessibility text sizes) and on iPad. The
+screenshots are attached to the run as an artifact. This is a starting point for App Store
 screenshots. It works through a debug-only launch argument that opens a screen with sample
 numbers filled in. You can use it from Xcode too: add it under **Edit Scheme → Run → Arguments**.
 
@@ -54,6 +60,7 @@ numbers filled in. You can use it from Xcode too: add it under **Edit Scheme →
 -demoScreen offset              # calculator with sample inputs
 -demoScreen offset:results      # same, with the marks listed first
 -demoScreen guided              # guided bend mode
+-demoScreen keypad              # the tape-measure keypad
 -demoScreen level | saved | settings | benders | paywall
 ```
 
