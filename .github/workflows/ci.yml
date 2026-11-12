@@ -45,6 +45,20 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -quiet \
             CODE_SIGNING_ALLOWED=NO
+      # The App Store build: Release, for devices. Catches anything that only breaks without DEBUG.
+      - name: Build Release for devices (unsigned)
+        run: |
+          xcodebuild build \
+            -project BendCoach.xcodeproj \
+            -scheme BendCoach \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/ReleaseData \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO
+          APP=build/ReleaseData/Build/Products/Release-iphoneos/BendCoach.app
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" -c "Print :ITSAppUsesNonExemptEncryption" "$APP/Info.plist"
+          test -f "$APP/PrivacyInfo.xcprivacy" && echo "Privacy manifest is in the app bundle"
 
   # Publishes an unsigned .ipa to the "test-build" release for sideloading onto a personal iPhone.
   test-ipa:
